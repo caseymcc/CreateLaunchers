@@ -258,7 +258,7 @@ macro(_launcher_produce_vcproj_user)
 			@ONLY)
 
         
-        #now we are looping thtough each config type loading the previous ones output, hopefully execution order stays the same as the generation request
+        #now we are looping through each config type loading the previous ones output, hopefully execution order stays the same as the generation request
 		set(launcher_last_config)
 		foreach(USERFILE_CONFIGNAME ${config_types})
 			if(NOT launcher_last_config)
