@@ -24,6 +24,7 @@ Usage
   # -When using gdb it will create shell scripts that call gdb to start
   #   the target with the requested settings
   create_target_launcher(<targetname>
+    [COMMAND <target command>]
     [ARGS <args...>]
     [FORWARD_ARGS]
     [RUNTIME_LIBRARY_DIRS <dir...>]
