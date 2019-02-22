@@ -14,12 +14,12 @@ Usage
   hunter_add_package(CreateLauncher)
   find_package(CreateLauncher CONFIG REQUIRED)
 
-  #Now include the modules, directory for CreateLaunchers would 
+  #Now include the modules, directory for CreateLaunchers would
   # have been add to CMAKE_MODULE_PATH
   include(CreateLaunchers)
 
   #Creates bash or shell script to launch the target from commandline
-  # -When using a VS generator it also creates VS .user so that the 
+  # -When using a VS generator it also creates VS .user so that the
   #   target can be launched by the VS debugger with request settings
   # -When using gdb it will create shell scripts that call gdb to start
   #   the target with the requested settings
