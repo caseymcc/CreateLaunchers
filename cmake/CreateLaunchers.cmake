@@ -239,7 +239,7 @@ macro(_launcher_produce_vcproj_user)
 			string(CONFIGURE "${_perconfig}" _temp @ONLY ESCAPE_QUOTES)
 
             #we are building the per config info with genertator expressions so that when generating the files only the config currently generated is being correctly filled in
-			set(_temp 
+			set(_temp
 				"$<IF:$<CONFIG:${USERFILE_CONFIGNAME}>,\n${_temp},$<TARGET_PROPERTY:${_targetname},LAUNCHER_USER_ELSE_${USERFILE_CONFIGNAME}>>\n"
 			)
 
@@ -257,7 +257,7 @@ macro(_launcher_produce_vcproj_user)
 			${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${USERFILE_EXTENSION}.config
 			@ONLY)
 
-        
+
         #now we are looping through each config type loading the previous ones output, hopefully execution order stays the same as the generation request
 		set(launcher_last_config)
 		foreach(USERFILE_CONFIGNAME ${config_types})
