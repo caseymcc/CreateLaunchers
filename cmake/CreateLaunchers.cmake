@@ -3,6 +3,7 @@
 #  include(CreateLaunchers) - to make these available
 #  guess_runtime_library_dirs(<outputvarname> [<extralibrary> ...])
 #  create_default_target_launcher(<targetname>
+#    [COMMAND <target command>]
 #    [ARGS <args...>]
 #    [FORWARD_ARGS]
 #    [RUNTIME_LIBRARY_DIRS <dir...>]
@@ -10,6 +11,7 @@
 #    [ENVIRONMENT <VAR=value> [<VAR=value>...]])
 #
 #  create_target_launcher(<targetname>
+#    [COMMAND <target command>]
 #    [ARGS <args...>]
 #    [FORWARD_ARGS]
 #    [RUNTIME_LIBRARY_DIRS <dir...>]
@@ -17,6 +19,7 @@
 #    [ENVIRONMENT <VAR=value> [<VAR=value>...]])
 #
 #  create_generic_launcher(<launchername>
+#    [COMMAND <target command>]
 #    [RUNTIME_LIBRARY_DIRS <dir...>]
 #    [WORKING_DIRECTORY <dir>]
 #    [ENVIRONMENT <VAR=value> [<VAR=value>...]])
@@ -113,6 +116,7 @@ macro(_launcher_process_args)
 	set(_curdest _nowhere)
 	set(_val_args
 		ARGS
+		COMMAND
 		RUNTIME_LIBRARY_DIRS
 		WORKING_DIRECTORY
 		ENVIRONMENT
@@ -153,6 +157,10 @@ macro(_launcher_process_args)
 	if(NOT WORKING_DIRECTORY)
 		set(WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 	endif()
+
+  if(NOT COMMAND)
+    set(COMMAND "$<TARGET_FILE:${_targetname}>")
+  endif()
 
 	if(FORWARD_ARGS)
 		if(WIN32)
@@ -235,11 +243,11 @@ macro(_launcher_produce_vcproj_user)
 
 		set(USERFILE_CONFIGSECTIONS)
 		foreach(USERFILE_CONFIGNAME ${config_types})
-            set(USERFILE_COMMAND "$<TARGET_FILE:${_targetname}>")
+      set(USERFILE_COMMAND "${COMMAND}")
 			string(CONFIGURE "${_perconfig}" _temp @ONLY ESCAPE_QUOTES)
 
             #we are building the per config info with genertator expressions so that when generating the files only the config currently generated is being correctly filled in
-			set(_temp 
+			set(_temp
 				"$<IF:$<CONFIG:${USERFILE_CONFIGNAME}>,\n${_temp},$<TARGET_PROPERTY:${_targetname},LAUNCHER_USER_ELSE_${USERFILE_CONFIGNAME}>>\n"
 			)
 
@@ -257,7 +265,7 @@ macro(_launcher_produce_vcproj_user)
 			${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${USERFILE_EXTENSION}.config
 			@ONLY)
 
-        
+
         #now we are looping through each config type loading the previous ones output, hopefully execution order stays the same as the generation request
 		set(launcher_last_config)
 		foreach(USERFILE_CONFIGNAME ${config_types})
