@@ -21,8 +21,8 @@ Usage
 
   #Creates bash or shell script to launch the target from commandline
   # -When using a VS generator it also creates VS .user so that the
-  #   target can be launched by the VS debugger with request settings
-  # -When using gdb it will create shell scripts that call gdb to start
+  #   target can be launched by the VS debugger with the requested settings
+  # -When using gdb it will create shell scripts that will call gdb to start
   #   the target with the requested settings
   create_target_launcher(<targetname>
     [COMMAND <target command>]
