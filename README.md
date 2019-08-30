@@ -11,6 +11,7 @@ Usage
 ```cmake
 
   #use hunter to get the latest version
+  #optional, you can just download and include it in you CMakeLists file
   hunter_add_package(CreateLauncher)
   find_package(CreateLauncher CONFIG REQUIRED)
 
