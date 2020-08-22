@@ -31,11 +31,14 @@
 # Requires CMake 2.6 or newer (uses the 'function' command)
 #
 # Original Author:
-# 2009-2010 Ryan Pavlik <rpavlik@iastate.edu> <abiryan@ryand.net>
+# 2009-2020 Ryan Pavlik <ryan.pavlik@gmail.edu> <abiryan@ryand.net>
 # http://academic.cleardefinition.com
-# Iowa State University HCI Graduate Program/VRAC
 #
-# Copyright Iowa State University 2009-2010.
+# Copyright 2009-2013, Iowa State University.
+# Copyright 2018-2019, caseymcc
+# Copyright 2020, Ryan Pavlik
+# Copyright 2014-2019, Contributors
+# SPDX-License-Identifier: BSL-1.0
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
@@ -52,9 +55,7 @@ include(CleanDirectoryList)
 
 # We must run the following at "include" time, not at function call time,
 # to find the path to this module rather than the path to a calling list file
-get_filename_component(_launchermoddir
-    ${CMAKE_CURRENT_LIST_FILE}
-    PATH)
+get_filename_component(_launchermoddir ${CMAKE_CURRENT_LIST_FILE} PATH)
 set(_launchermoddir "${_launchermoddir}/launcher-templates")
 
 macro(_launcher_system_settings)
@@ -114,13 +115,8 @@ endmacro()
 macro(_launcher_process_args)
     set(_nowhere)
     set(_curdest _nowhere)
-    set(_val_args
-        ARGS
-        COMMAND
-        RUNTIME_LIBRARY_DIRS
-        WORKING_DIRECTORY
-        ENVIRONMENT
-        TARGET_PLATFORM)
+    set(_val_args ARGS COMMAND RUNTIME_LIBRARY_DIRS WORKING_DIRECTORY
+                  ENVIRONMENT TARGET_PLATFORM)
     set(_bool_args FORWARD_ARGS)
     foreach(_arg ${_val_args} ${_bool_args})
         set(${_arg})
@@ -140,8 +136,8 @@ macro(_launcher_process_args)
     endforeach()
 
     if(_nowhere)
-        message(FATAL_ERROR
-            "Syntax error in use of a function in CreateLaunchers!")
+        message(
+            FATAL_ERROR "Syntax error in use of a function in CreateLaunchers!")
     endif()
 
     # Turn into a list of native paths
@@ -183,11 +179,10 @@ macro(_launcher_process_args)
 
     if(WIN32)
         if(_runtime_lib_dirs)
-            set(RUNTIME_LIBRARIES_ENVIRONMENT "PATH=${_runtime_lib_dirs}$<SEMICOLON>%PATH%")
+            set(RUNTIME_LIBRARIES_ENVIRONMENT
+                "PATH=${_runtime_lib_dirs}$<SEMICOLON>%PATH%")
         endif()
-        file(READ
-            "${_launchermoddir}/launcher.env.cmd.in"
-            _cmdenv)
+        file(READ "${_launchermoddir}/launcher.env.cmd.in" _cmdenv)
     else()
         if(_runtime_lib_dirs)
             if(APPLE)
@@ -199,36 +194,29 @@ macro(_launcher_process_args)
                     "LD_LIBRARY_PATH=${_runtime_lib_dirs}:$LD_LIBRARY_PATH")
             endif()
         endif()
-        file(READ
-            "${_launchermoddir}/launcher.env.sh.in"
-            _cmdenv)
+        file(READ "${_launchermoddir}/launcher.env.sh.in" _cmdenv)
     endif()
 
     set(USERFILE_ENVIRONMENT)
     set(USERFILE_ENV_COMMANDS)
     foreach(_arg "${RUNTIME_LIBRARIES_ENVIRONMENT}" ${ENVIRONMENT})
         if(_arg)
-            string(CONFIGURE
-                "@USERFILE_ENVIRONMENT@@LAUNCHER_LINESEP@@_arg@"
-                USERFILE_ENVIRONMENT
-                @ONLY)
+            string(CONFIGURE "@USERFILE_ENVIRONMENT@@LAUNCHER_LINESEP@@_arg@"
+                             USERFILE_ENVIRONMENT @ONLY)
         endif()
-        string(CONFIGURE
-            "@USERFILE_ENV_COMMANDS@${_cmdenv}"
-            USERFILE_ENV_COMMANDS
-            @ONLY)
+        string(CONFIGURE "@USERFILE_ENV_COMMANDS@${_cmdenv}"
+                         USERFILE_ENV_COMMANDS @ONLY)
     endforeach()
 endmacro()
 
-#ok, we have gone very hackish on this function as the file(GENERATE) is very hard to work with as the cmake guys really dont
+#ok, we have gone very hackish on this function as the file(GENERATE) is very hard to work with as the cmake folks really don't
 #want you writing generator files yourself, yet the user file is not planning to ever be supported
 macro(_launcher_produce_vcproj_user)
     if(MSVC)
         set(CMAKEFILES_PATH "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles")
         set(TARGET_CMAKE_FILES "${CMAKEFILES_PATH}/${_targetname}")
-        file(READ
-            "${_launchermoddir}/perconfig.${VCPROJ_TYPE}.user.in"
-            _perconfig)
+        file(READ "${_launchermoddir}/perconfig.${VCPROJ_TYPE}.user.in"
+             _perconfig)
 
         #generator expressions do not play well with ">"
         string(REPLACE ">" "$<ANGLE-R>" _perconfig ${_perconfig})
@@ -252,48 +240,66 @@ macro(_launcher_produce_vcproj_user)
             )
 
             #we are putting this info into the target properties so it can be recuresively added back during the generator calls
-            set_target_properties(${_targetname} PROPERTIES LAUNCHER_USER_ELSE_${USERFILE_CONFIGNAME} ${_temp})
+            set_target_properties(
+                ${_targetname}
+                PROPERTIES LAUNCHER_USER_ELSE_${USERFILE_CONFIGNAME} ${_temp})
 
-            string(CONFIGURE
-                "${USERFILE_CONFIGSECTIONS}${_temp}"
-                USERFILE_CONFIGSECTIONS
-                ESCAPE_QUOTES)
+            string(CONFIGURE "${USERFILE_CONFIGSECTIONS}${_temp}"
+                             USERFILE_CONFIGSECTIONS ESCAPE_QUOTES)
         endforeach()
 
-
-        configure_file("${_launchermoddir}/${VCPROJ_TYPE}.user.in"
+        configure_file(
+            "${_launchermoddir}/${VCPROJ_TYPE}.user.in"
             ${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${USERFILE_EXTENSION}.config
             @ONLY)
 
-
-        #now we are looping through each config type loading the previous ones output, hopefully execution order stays the same as the generation request
+        #now we are looping thtough each config type loading the previous ones output, hopefully execution order stays the same as the generation request
         set(launcher_last_config)
         foreach(USERFILE_CONFIGNAME ${config_types})
             if(NOT launcher_last_config)
-                file(GENERATE OUTPUT ${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${USERFILE_CONFIGNAME}.usergen INPUT ${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${USERFILE_EXTENSION}.config CONDITION $<CONFIG:${USERFILE_CONFIGNAME}>)
+                file(
+                    GENERATE
+                    OUTPUT
+                        ${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${USERFILE_CONFIGNAME}.usergen
+                    INPUT
+                        ${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${USERFILE_EXTENSION}.config
+                    CONDITION $<CONFIG:${USERFILE_CONFIGNAME}>)
             else()
-                file(GENERATE OUTPUT ${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${USERFILE_CONFIGNAME}.usergen INPUT ${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${launcher_last_config}.usergen CONDITION $<CONFIG:${USERFILE_CONFIGNAME}>)
+                file(
+                    GENERATE
+                    OUTPUT
+                        ${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${USERFILE_CONFIGNAME}.usergen
+                    INPUT
+                        ${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${launcher_last_config}.usergen
+                    CONDITION $<CONFIG:${USERFILE_CONFIGNAME}>)
             endif()
             set(launcher_last_config ${USERFILE_CONFIGNAME})
         endforeach()
         #build the final output from the last generation output
-        file(GENERATE OUTPUT ${VCPROJNAME}.${VCPROJ_TYPE}.${USERFILE_EXTENSION} INPUT ${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${launcher_last_config}.usergen)
+        file(
+            GENERATE
+            OUTPUT ${VCPROJNAME}.${VCPROJ_TYPE}.${USERFILE_EXTENSION}
+            INPUT
+                ${TARGET_CMAKE_FILES}.${VCPROJ_TYPE}.${launcher_last_config}.usergen
+        )
     endif()
 
 endmacro()
 
 macro(_launcher_configure_executable _src _tmp _target _config)
-    configure_file("${_src}"
-        "${_tmp}"
-        @ONLY)
+    configure_file("${_src}" "${_tmp}" @ONLY)
 
     #used to convert generator expressions
-    file(GENERATE OUTPUT "${_target}" INPUT "${_tmp}" CONDITION $<CONFIG:${_config}>)
-#we lose the ability to change the file permisions as there is no support there in file(GENERATE) (although it has been requested)
-#and nothing runs after file(GENERATE) durning the cmake call
-#    file(COPY "${_tmp}"
-#        DESTINATION "${_targetpath}"
-#        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+    file(
+        GENERATE
+        OUTPUT "${_target}"
+        INPUT "${_tmp}"
+        CONDITION $<CONFIG:${_config}>)
+    #we lose the ability to change the file permisions as there is no support there in file(GENERATE) (although it has been requested)
+    #and nothing runs after file(GENERATE) durning the cmake call
+    #	file(COPY "${_tmp}"
+    #	    DESTINATION "${_targetpath}"
+    #	    FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 endmacro()
 
 macro(_launcher_create_target_launcher)
@@ -301,14 +307,15 @@ macro(_launcher_create_target_launcher)
         # Multi-config generator - multiple launchers
         foreach(_config ${CMAKE_CONFIGURATION_TYPES})
             set(_fn "launch-${_targetname}-${_config}.${_suffix}")
-            _launcher_configure_executable("${_launchermoddir}/targetlauncher.${_suffix}.in"
+            _launcher_configure_executable(
+                "${_launchermoddir}/targetlauncher.${_suffix}.in"
                 "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${_fn}"
-                "${CMAKE_CURRENT_BINARY_DIR}/${_fn}"
-                ${_config})
+                "${CMAKE_CURRENT_BINARY_DIR}/${_fn}" ${_config})
         endforeach()
     else()
         # Single-config generator - single launcher
-        _launcher_configure_executable("${_launchermoddir}/targetlauncher.${_suffix}.in"
+        _launcher_configure_executable(
+            "${_launchermoddir}/targetlauncher.${_suffix}.in"
             "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/launch-${_targetname}.${_suffix}"
             "${CMAKE_CURRENT_BINARY_DIR}/launch-${_targetname}.${_suffix}"
             ${CMAKE_BUILD_TYPE})
@@ -346,18 +353,28 @@ function(create_generic_launcher _launchername)
         set(_launchername "${_launchername}.${_suffix}")
     endif()
     if(WIN32)
-        set(GENERIC_LAUNCHER_COMMAND "${_launchername}" PARENT_SCOPE)
+        set(GENERIC_LAUNCHER_COMMAND
+            "${_launchername}"
+            PARENT_SCOPE)
         set(GENERIC_LAUNCHER_FAIL_REGULAR_EXPRESSION)
     else()
-        set(GENERIC_LAUNCHER_COMMAND sh "${_launchername}" PARENT_SCOPE)
+        set(GENERIC_LAUNCHER_COMMAND
+            sh "${_launchername}"
+            PARENT_SCOPE)
         set(GENERIC_LAUNCHER_FAIL_REGULAR_EXPRESSION
             "Program terminated with signal")
     endif()
 
-    _launcher_configure_executable("${_launchermoddir}/genericlauncher.${_suffix}.in"
+    if(CMAKE_CONFIGURATION_TYPES)
+        set(_launcher_build_type "${CMAKE_BUILD_TYPE}")
+    else()
+        unset(_launcher_build_type)
+    endif()
+
+    _launcher_configure_executable(
+        "${_launchermoddir}/genericlauncher.${_suffix}.in"
         "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/genericlauncher.${_suffix}.in"
-        "${_launchername}"
-        ${CMAKE_BUILD_TYPE})
+        "${_launchername}" ${_launcher_build_type})
 endfunction()
 
 function(guess_runtime_library_dirs _var)
@@ -385,7 +402,9 @@ function(guess_runtime_library_dirs _var)
     clean_directory_list(_dlldirs)
 
     # Return _dlldirs
-    set(${_var} "${_dlldirs}" PARENT_SCOPE)
+    set(${_var}
+        "${_dlldirs}"
+        PARENT_SCOPE)
 endfunction()
 
 cmake_policy(POP)
